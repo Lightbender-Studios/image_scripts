@@ -39,7 +39,7 @@ param(
 # Get a list of image files in the directory
 $imageFiles = Get-ChildItem -Path $directoryPath -File | Where-Object { $_.Extension -match '\.jpg$|\.jpeg$|\.png$|\.gif$|\.bmp$' }
 
-# Initialize variables to count directories and files copied
+# Initialize variables to count directories and files moved
 $directoryCount = 0
 $fileCount = 0
 
@@ -61,9 +61,9 @@ foreach ($imageFile in $imageFiles) {
     # Construct the new file name
     $newFileName = $nameBeforeLastUnderscore + $imageFile.Extension
     
-    # Copy the image file to the appropriate directory with the new name
+    # Move the image file to the appropriate directory with the new name
     $destinationFilePath = Join-Path -Path $newDirectoryPath -ChildPath $newFileName
-    Copy-Item -Path $imageFile.FullName -Destination $destinationFilePath -Force
+    Move-Item -Path $imageFile.FullName -Destination $destinationFilePath -Force
     $fileCount++
 }
 
@@ -76,4 +76,4 @@ foreach ($name in $uniqueNames) {
 
 # Output total stats
 Write-Output "Total directories created: $directoryCount"
-Write-Output "Total image files copied: $fileCount"
+Write-Output "Total image files moved: $fileCount"
