@@ -36,42 +36,34 @@ param(
     [string]$directoryPath = (Get-Location)
 )
 
-# Get a list of files in the directory
-$files = Get-ChildItem -Path $directoryPath
-
-# Initialize an empty array to store unique names
-$uniqueNames = @()
+# Get a list of image files in the directory
+$imageFiles = Get-ChildItem -Path $directoryPath -File | Where-Object { $_.Extension -match '\.jpg$|\.jpeg$|\.png$|\.gif$|\.bmp$' }
 
 # Initialize variables to count directories and files copied
 $directoryCount = 0
 $fileCount = 0
 
-# Iterate through each file
-foreach ($file in $files) {
+# Iterate through each image file
+foreach ($imageFile in $imageFiles) {
     # Extract the name of the file
-    $fileName = $file.Name
+    $fileName = $imageFile.Name
     
-    # Extract the part of the name before the first underscore
-    $nameBeforeUnderscore = $fileName -split '_'
-    $firstName = $nameBeforeUnderscore[0]
+    # Extract the part of the name before the last underscore
+    $nameBeforeLastUnderscore = $fileName -replace '^(.*)_.*\.(jpg|jpeg|png|gif|bmp)$', '$1'
 
-    # Check if the name is not already in the uniqueNames array, then add it
-    if ($firstName -notin $uniqueNames) {
-        $uniqueNames += $firstName
-        
-        # Create a directory for the unique name within the specified directory
-        $newDirectoryPath = Join-Path -Path $directoryPath -ChildPath $firstName
+    # Create a directory for the extracted name within the specified directory
+    $newDirectoryPath = Join-Path -Path $directoryPath -ChildPath $nameBeforeLastUnderscore
+    if (-not (Test-Path -Path $newDirectoryPath)) {
         New-Item -ItemType Directory -Path $newDirectoryPath -ErrorAction SilentlyContinue
-        
-        # Increment the count of directories copied
         $directoryCount++
     }
     
-    # Copy the file to the appropriate directory within the specified directory
-    $destinationDirectory = Join-Path -Path $directoryPath -ChildPath $firstName
-    Move-Item -Path $file.FullName -Destination $destinationDirectory
+    # Construct the new file name
+    $newFileName = $nameBeforeLastUnderscore + $imageFile.Extension
     
-    # Increment the count of files moved
+    # Copy the image file to the appropriate directory with the new name
+    $destinationFilePath = Join-Path -Path $newDirectoryPath -ChildPath $newFileName
+    Copy-Item -Path $imageFile.FullName -Destination $destinationFilePath -Force
     $fileCount++
 }
 
@@ -84,4 +76,4 @@ foreach ($name in $uniqueNames) {
 
 # Output total stats
 Write-Output "Total directories created: $directoryCount"
-Write-Output "Total files moved: $fileCount"
+Write-Output "Total image files copied: $fileCount"
